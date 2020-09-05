@@ -1,60 +1,35 @@
 from django.http import JsonResponse
 from django.shortcuts import render
-
+from django.contrib.auth.models import User,Group
 
 #third party imports
-from rest_framework import mixins
+from rest_framework import mixins,viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import permissions
 from rest_framework import generics
 
 #importing serializers
-from .serializers import PostSerializer
+from .serializers import PostSerializer,UserSerializer,GroupSerializer
 from .models import Post
 
+class UserViewset(viewsets.ModelViewSet):
+    """
 
-class PostView(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    generics.GenericAPIView):
-    serializer_class = PostSerializer
-    queryset = Post.objects.all()
-   
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+    API endpoint that allow users to be viewed or edited
     
-    def post(self, request, *args, **kwargs):
-        # fields = ('title', 'description', 'owner')
-        # serializer = PostSerializer(data=request.data)
-        # if serializer.is_valid():
-        #     serializer.save()
-        #     return Response(serializer.data)
-        # return Response(serializer.errors)
-        return self.create(request, *args, **kwargs)
+    """
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
+class GroupViewset(viewsets.ModelViewSet):
+    """
 
+    API endpoint that allowed groups to viewed and edited.
 
-# class TestView(APIView):
-#     permission_classes = (IsAuthenticated, )
+    """
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-#     def get(self, request, *args, **kwargs):
-#         qs = Post.objects.all()
-#         searializer = PostSerializer(qs, many=True)
-#         return Response(searializer.data)
-
-#     def post(self, request, *args , **kwargs):
-#         serializer = PostSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data)
-#         return Response(serializer.errors)
-
-class PostCreateView(mixins.ListModelMixin,generics.CreateAPIView):
-    serializer_class = PostSerializer
-    queryset = Post.objects.all()
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-    
