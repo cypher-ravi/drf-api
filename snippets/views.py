@@ -4,16 +4,20 @@ from django.http import Http404
 
 #status module and Response object instead of JSONresponse, added permission,adding apiview decorator for simple api root
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,action
 from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework.decorators import api_view
 from rest_framework.reverse import reverse
 from rest_framework import renderers
 
+
+
 #mixins and generic views for class based views
 from rest_framework import mixins
 from rest_framework import generics
+#using viewsets
+from rest_framework import viewsets
 
 
 
@@ -66,11 +70,37 @@ class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SnippetSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly]
 
-  
-class UserList(generics.ListAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
 
-class UserDetail(generics.RetrieveAPIView):
+
+
+class SnippetViewSet(viewsets.ModelViewSet):
+    """
+    This viewset automatically provides list, create, retrieve, update and destroy actions.
+
+    Additionally we also added extra highlight action 
+
+    """
+  
+    queryset = Snippet.objects.all()
+    serializer_class = SnippetSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly]
+
+    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
+    def highlight(self, request, *args, **kwargs):
+        snippet = self.get_object()
+        return Response(snippet.highlighted)
+
+
+    def perform_create(self, serializer):
+        serializer.save(owner= self.request.user)
+
+#Refractoring into viewsets
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+
+    this viewset automatically provides `list` and `details` action
+
+    """
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
